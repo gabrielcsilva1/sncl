@@ -20,7 +20,7 @@ local parsingTable = {
         id = id,
         component = comp,
         interface = iface,
-        line = gbl.parserLine
+        line = gbl.parser_line
       }
       if utils:isIdUsed(element.id, symbolsTable) then
         return nil
@@ -52,7 +52,7 @@ local parsingTable = {
         role = rl,
         component = cp,
         interface = iface,
-        line = gbl.parserLine
+        line = gbl.parser_line
       }
       return element
     end
@@ -68,7 +68,7 @@ local parsingTable = {
       local element = {
         _type = _type,
         properties = nil,
-        line = gbl.parserLine,
+        line = gbl.parser_line,
         hasEnd = false
       }
 
@@ -82,8 +82,8 @@ local parsingTable = {
             element.role = val.role
             element.component = val.component
             if val.interface then
-              if lpeg.match(utils.checks.buttons, val.interface) and val._type == 'condition' then
-                element.properties.__keyValue = val.interface
+              if lpeg.match(utils.checks.buttons, val.interface) and element._type == 'condition' then
+                utils:addProperty(element, '__keyValue', val.interface)
               else
                 element.interface = val.interface
               end
@@ -110,7 +110,7 @@ local parsingTable = {
         conditions = {},
         actions = {},
         properties = {},
-        line = gbl.parserLine,
+        line = gbl.parser_line,
         hasEnd = false
       }
       for _, val in pairs(tbl) do
@@ -134,7 +134,7 @@ local parsingTable = {
       if not isMacroSon then
         table.insert(sT.presentation, element)
       end
-      element.xconnector = rS:makeConn(element, sT)
+      element.xconnector = resolve:makeConnector(element, sT)
       return element
     end
   end,
@@ -156,7 +156,7 @@ local parsingTable = {
         children = {},
         parameters = {},
         hasEnd = false,
-        line = gbl.parserLine
+        line = gbl.parser_line
       }
 
       if utils:isIdUsed(element.id, sT) then
@@ -192,7 +192,7 @@ local parsingTable = {
         _type = 'macro-call',
         macro = mc,
         arguments = args,
-        line = gbl.parserLine
+        line = gbl.parser_line
       }
       table.insert(sT.macroCall, element)
       return element
@@ -212,7 +212,7 @@ local parsingTable = {
         start = start,
         class = class,
         children = {},
-        line = gbl.parserLine-1
+        line = gbl.parser_line-1
       }
 
       for _, val in pairs(tbl) do
@@ -237,7 +237,7 @@ function parsingTable:makePresentationElement(str, symbolsTable, isMacroSon)
       properties = nil,
       children = nil,
       hasEnd = false,
-      line = gbl.parserLine
+      line = gbl.parser_line
     }
 
     -- TODO: this shouldn't be on utils
@@ -251,8 +251,11 @@ function parsingTable:makePresentationElement(str, symbolsTable, isMacroSon)
       element = self:parseMediaBody(element, elementBody, symbolsTable)
     end
 
+    -- # TODO parse others presentation elements (area with properties, context whith children)
+
     if not isMacroSon then
       symbolsTable.presentation[element.id] = element
+      -- # TODO region must only be inserted in the symbolsTable.head
     end
 
     return element
@@ -269,7 +272,7 @@ function parsingTable:parseMediaBody(mediaElement, bodyElements, symbolsTable)
               return error(string.format('Element %s already has a region declared', mediaElement.id))
             end
             mediaElement.region = propertyValue
-            mediaElement.descriptor = resolve.makeDescriptor(propertyValue, symbolsTable)
+            mediaElement.descriptor = resolve:makeDescriptor(propertyValue, symbolsTable)
           elseif propertyName == 'src' then mediaElement.src = propertyValue
           elseif propertyName == 'type' then mediaElement.type = propertyValue
           elseif propertyName == 'descriptor' then mediaElement.descriptor = propertyValue
