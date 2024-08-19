@@ -11,11 +11,11 @@ local resolveMacros = {
    -- @param ele The macro-son element
    -- @param newEle The element that is being generated
    -- @param call The call
-   elementProperties = function(ele, newEle, call, sT)
+   elementProperties = function(ele, newEle, call, symbolsTable)
       for name, value in pairs(ele.properties) do
          --[[ If the property is a parameter ]]
-         local parameters = sT.macro[call.macro].parameters
-         if utils.containValue(parameters, value) then
+         local parameters = symbolsTable.macro[call.macro].parameters
+         if utils.containsValue(parameters, value) then
             local index = utils.getIndex(parameters, value)
             utils:addProperty(newEle, name, call.arguments[index])
          else
@@ -32,8 +32,8 @@ local resolveMacros = {
 -- @param ele The element that is inside the macro
 -- @param call The call to the macro
 -- @param stack The stack of calls
--- @param sT The symbol table
-function resolveMacros:presentation(ele, call, stack, sT)
+-- @param symbolsTable The symbol table
+function resolveMacros:presentation(ele, call, stack, symbolsTable)
    local newEle = {
       id = ele.id,
       _type = ele._type,
@@ -42,38 +42,38 @@ function resolveMacros:presentation(ele, call, stack, sT)
       line = call.line
    }
 
-   local parameters = sT.macro[call.macro].parameters
+   local parameters = symbolsTable.macro[call.macro].parameters
    if ele._type == 'port' then
       newEle.component = self.getArgument(call.arguments, parameters, ele.component)
    end
 
    local newId = self.getArgument(call.arguments, parameters, ele.id)
    --[[ Check is an element with the same Id is already declared ]]
-   if sT.presentation[newId] then
-      utils.printErro(string.format('Id %s already declared.', newId), call.line)
+   if symbolsTable.presentation[newId] then
+      utils.printError(string.format('Id %s already declared.', newId), call.line)
       return nil
    end
    newId = newId:gsub('"', '') -- Remove "", because the argument has ""
    newEle.id = newId
 
    if ele.properties then
-      self.elementProperties(ele, newEle, call, sT)
+      self.elementProperties(ele, newEle, call, symbolsTable)
    end
 
-   sT.presentation[newEle.id] = newEle
+   symbolsTable.presentation[newEle.id] = newEle
 
    if ele.children then
       for _, son in pairs(ele.children) do
          if son._type == 'link' then
-            local newLink = self:link(son, call, sT)
+            local newLink = self:link(son, call, symbolsTable)
             if newLink then
                table.insert(newEle.children, newLink)
                newLink.father = newEle
             end
          elseif son._type == 'macro-call' then
-            self:aux(son, stack, sT)
+            self:aux(son, stack, symbolsTable)
          else
-            local newSon = self:presentation(son, call, stack, sT)
+            local newSon = self:presentation(son, call, stack, symbolsTable)
             if newSon then
                newEle.children[newSon.id] = newSon
                newSon.father = newEle
@@ -106,7 +106,7 @@ end
 -- @param parameters
 -- @param argument
 function resolveMacros.getArgument(arguments, parameters, value)
-   if utils.containValue(parameters, value) then
+   if utils.containsValue(parameters, value) then
       return arguments[utils.getIndex(parameters, value)]
    end
    return value
@@ -115,8 +115,8 @@ end
 --- Generates a <bind> element of a <link> element
 -- @param bind
 -- @param call
--- @param sT
-function resolveMacros:bind(bind, call, sT)
+-- @param symbolsTable
+function resolveMacros:bind(bind, call, symbolsTable)
    local newBind = {
       _type = bind._type,
       role = bind.role,
@@ -125,7 +125,7 @@ function resolveMacros:bind(bind, call, sT)
       properties = {},
       line = call.line
    }
-   local macro = sT.macro[call.macro]
+   local macro = symbolsTable.macro[call.macro]
 
    newBind.component = self.getArgument(call.arguments, macro.parameters, bind.component)
    newBind.interface = self.getArgument(call.arguments, macro.parameters, bind.interface)
@@ -146,8 +146,8 @@ end
 --- Generates a <link> element
 -- @param ele
 -- @param call
--- @param sT
-function resolveMacros:link(ele, call, sT)
+-- @param symbolsTable
+function resolveMacros:link(ele, call, symbolsTable)
    local newEle = {
       _type = ele._type,
       xconnector = ele.xconnector,
@@ -157,16 +157,16 @@ function resolveMacros:link(ele, call, sT)
       line = call.line
    }
 
-   local macro = sT.macro[call.macro]
+   local macro = symbolsTable.macro[call.macro]
 
    for _, action in pairs(ele.actions) do
-      local newAction = self:bind(action, call, sT)
+      local newAction = self:bind(action, call, symbolsTable)
       newAction.father = newEle
       table.insert(newEle.actions, newAction)
    end
 
    for _, condition in pairs(ele.conditions) do
-      local newCond = self:bind(condition, call, sT)
+      local newCond = self:bind(condition, call, symbolsTable)
       newCond.father = newEle
       table.insert(newEle.conditions, newCond)
    end
@@ -184,19 +184,19 @@ end
 -- returns can be inserted inside of the macro, or the call.
 -- @param call
 -- @param stack
--- @param sT
-function resolveMacros:aux(call, stack, sT)
+-- @param symbolsTable
+function resolveMacros:aux(call, stack, symbolsTable)
    local newEles = {}
 
-   local macro = sT.macro[call.macro]
+   local macro = symbolsTable.macro[call.macro]
    table.insert(stack, call)
    for _, son in pairs(macro.children) do
       if son._type == 'link' then
-         local newLink = self:link(son, call, sT)
+         local newLink = self:link(son, call, symbolsTable)
          table.insert(newLink)
          -- resolveLinkMacro
       else
-         local newPres = self:presentation(son, call, stack, sT)
+         local newPres = self:presentation(son, call, stack, symbolsTable)
          newEles[newPres.id] = newPres
       end
       -- TODO: The son can also be a property, or a macro-call
@@ -209,14 +209,14 @@ end
 --- Resolve the call, generating an element
 -- @param call The call element itself
 -- @param stack The stack of calls
--- @param sT The symbol table
-function resolveMacros:call(call, stack, sT)
-   local macro = sT.macro[call.macro]
+-- @param symbolsTable The symbol table
+function resolveMacros:call(call, stack, symbolsTable)
+   local macro = symbolsTable.macro[call.macro]
    local abv = stack[#stack]
 
    --[[ If the called macro is not declared ]]
    if not macro then
-      utils.printErro(string.format("Macro %s not declared.", call.macro), call.line)
+      utils.printError(string.format("Macro %s not declared.", call.macro), call.line)
       return nil
    end
 
@@ -228,11 +228,11 @@ function resolveMacros:call(call, stack, sT)
             the padding document must have the same number of properties as
             the number of arguments of the macro --]]
          if call.father._type ~= 'for' then
-            utils.printErro('Wrong number of arguments.', call.line)
+            utils.printError('Wrong number of arguments.', call.line)
             return nil
          end
       else
-         utils.printErro('Wrong number of arguments.', call.line)
+         utils.printError('Wrong number of arguments.', call.line)
          return nil
       end
    end
@@ -248,21 +248,21 @@ function resolveMacros:call(call, stack, sT)
             --[[ Check if the macro really has the argument as a parameter
                If it does, then the call must pass the value of the argument
                is what is being passed to the macro that the call is inside]]
-            if utils.containValue(sT.macro[abv.macro].parameters, val) then
-               local index = utils.getIndex(sT.macro[abv.macro].parameters, val)
+            if utils.containsValue(symbolsTable.macro[abv.macro].parameters, val) then
+               local index = utils.getIndex(symbolsTable.macro[abv.macro].parameters, val)
                call.arguments[p] = abv.arguments[index]
             else
-               utils.printErro(string.format('Argument %s is not a parameter of a macro.',
+               utils.printError(string.format('Argument %s is not a parameter of a macro.',
                   val), call.line)
                return nil
             end
          else
-            utils.printErro(string.format('Argument %s invalid.', val), call.line)
+            utils.printError(string.format('Argument %s invalid.', val), call.line)
             return nil
          end
       end
    end
-   self:aux(call, stack, sT)
+   self:aux(call, stack, symbolsTable)
 
 end
 

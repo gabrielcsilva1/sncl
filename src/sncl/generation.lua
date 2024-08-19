@@ -177,9 +177,25 @@ function nclGeneration:link(element, symbolsTable, indent)
    return result
 end
 
+function nclGeneration:area(element, indent)
+   local result = string.format('%s<area id="%s"', indent, element.id)
+
+   if element.properties then
+      for name, value in pairs(element.properties) do
+         result = result..string.format(' %s="%s"', name, value)
+      end
+   end
+
+   result = result..' />'
+   return result
+end
+
 function nclGeneration:presentation(element, symbolsTable, indent)
    if element._type == 'macro-call' or element._type == 'for' then
       return ''
+   end
+   if element._type == 'area' then
+      return self:area(element, indent)
    end
 
    -- Check if the refered region is decladed

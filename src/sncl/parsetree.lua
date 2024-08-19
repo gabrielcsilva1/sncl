@@ -234,8 +234,8 @@ function parsingTable:makePresentationElement(str, symbolsTable, isMacroSon)
     local element = {
       _type = _type,
       id = id,
-      properties = nil,
-      children = nil,
+      properties = {},
+      children = {},
       hasEnd = false,
       line = gbl.parser_line
     }
@@ -245,48 +245,43 @@ function parsingTable:makePresentationElement(str, symbolsTable, isMacroSon)
       return error(string.format("Id %s already declared", element.id))
     end
 
-    if element._type == 'region' then
+    if element._type == 'region' and not isMacroSon then
       symbolsTable.head[element.id] = element
-    elseif element._type == 'media' then
-      element = self:parseMediaBody(element, elementBody, symbolsTable)
-    end
-
-    -- # TODO parse others presentation elements (area with properties, context whith children)
-
-    if not isMacroSon then
+    elseif not isMacroSon then
       symbolsTable.presentation[element.id] = element
-      -- # TODO region must only be inserted in the symbolsTable.head
+    end
+    
+    for _, val in pairs(elementBody) do
+      if type(val) == 'table' then
+        if val._type == 'property' then
+          for propertyName, propertyValue in pairs(val) do
+            if isMacroSon then
+              element.properties[propertyName] = propertyValue
+            else
+              if propertyName == 'rg' then
+                if element.region then
+                   utils.printErro(string.format('Region %s already declared', element.region), element.line)
+                   return nil
+                end
+                element.region = propertyValue
+                
+                element.descriptor = resolve:makeDescriptor(propertyValue, symbolsTable)
+              else
+                utils:addProperty(element, propertyName, propertyValue)
+              end
+            end
+          end
+        else
+          table.insert(element.children, val)
+          val.father = element
+        end
+      elseif val == 'end' then
+        element.hasEnd = true
+      end
     end
 
     return element
   end
-end
-
-function parsingTable:parseMediaBody(mediaElement, bodyElements, symbolsTable)
-  for _, element in pairs(bodyElements) do
-    if type(element) == 'table' then
-      if element._type == 'property' then
-        for propertyName, propertyValue in pairs(element) do
-          if propertyName == 'rg' then
-            if mediaElement.region then
-              return error(string.format('Element %s already has a region declared', mediaElement.id))
-            end
-            mediaElement.region = propertyValue
-            mediaElement.descriptor = resolve:makeDescriptor(propertyValue, symbolsTable)
-          elseif propertyName == 'src' then mediaElement.src = propertyValue
-          elseif propertyName == 'type' then mediaElement.type = propertyValue
-          elseif propertyName == 'descriptor' then mediaElement.descriptor = propertyValue
-          else utils:addProperty(mediaElement, propertyName, propertyValue)
-          end
-        end
-      else
-        -- TODO: it is a child
-      end
-    elseif element == 'end' then
-      mediaElement.hasEnd = true
-    end
-  end
-  return mediaElement
 end
 
 return parsingTable

@@ -9,7 +9,7 @@ local preprocessing = {
       for _, val in pairs(symbolsTable.macroCall) do
          if not utils:isMacroSon(val) then
             local stack = {}
-            macro:call(val, stack, sT)
+            macro:call(val, stack, symbolsTable)
          end
       end
       -- resolveTemplates()

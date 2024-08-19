@@ -69,10 +69,17 @@ function utils.printError(errorString, line)
 end
 
 function utils:addProperty(element, name, value)
-  if name == "_type" then return nil end
+  if name == "_type" or name == 'line' then return nil end
   if not element.properties then element.properties = {} end
+
   if element.properties[name] then
     return error(string.format("Property %s already declared", name))
+  end
+  
+  if name == 'src' then
+    element.src = value
+  elseif name == 'type' then
+    element.type = value 
   else
     element.properties[name] = value
   end

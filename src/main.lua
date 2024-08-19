@@ -2,7 +2,7 @@ local utils = require('sncl.utils')
 local gbl = require('sncl.globals')
 
 local grammar = require('sncl.grammar')
---local pp = require('sncl.pre_process')
+-- local pp = require('sncl.preprocessing')
 local ltab = require('sncl.ltab')
 local nclGeneration = require('sncl.generation')
 
