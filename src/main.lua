@@ -52,7 +52,7 @@ function sncl:beginParse(args)
    gbl.input_file = args.input
    local sncl_input = utils:readFile(args.input)
    if not sncl_input then
-      utils.printErro('Error reading input file')
+      utils.printError('Error reading input file')
       return gbl.erros
    end
    -- gerar a tabela Lua que representa o sncl

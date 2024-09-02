@@ -260,7 +260,7 @@ function parsingTable:makePresentationElement(str, symbolsTable, isMacroSon)
             else
               if propertyName == 'rg' then
                 if element.region then
-                   utils.printErro(string.format('Region %s already declared', element.region), element.line)
+                   utils.printError(string.format('Region %s already declared', element.region), element.line)
                    return nil
                 end
                 element.region = propertyValue

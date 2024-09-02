@@ -1,7 +1,8 @@
 local lpeg = require('lpeg')
 
 local parseTree = require('sncl.parsetree')
-local gbl = require('sncl.globals') local utils = require('sncl.utils')
+local gbl = require('sncl.globals') 
+local utils = require('sncl.utils')
 
 lpeg.locale(lpeg)
 
