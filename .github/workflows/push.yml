@@ -1,11 +1,26 @@
-name: Push
-
-on:
-  - push
-
+name: Run tests
+on: [push, pull_request]
 jobs:
-  Initial:
+  run-test:
+    name: Run tests
     runs-on: ubuntu-latest
     steps:
-      - run: echo "Test Action"
+      - name: Checkout
+        uses: actions/checkout@v3
 
+      - name: Setup lua
+        uses: leafo/gh-actions-lua@v10
+        with:
+          luaVersion: "5.1.5"
+      
+      - name: Setup luarocks
+        uses: leafo/gh-actions-luarocks@v4
+
+      - name: Setup dependencies
+        run: luarocks make
+
+      - name: Install busted
+        run: luarocks install busted
+
+      - name: Run tests with busted
+        run: busted
