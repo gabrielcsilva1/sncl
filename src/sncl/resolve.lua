@@ -22,9 +22,13 @@ function resolve:makeConnectorBind(xconn, bind)
   else
     xconn.id = xconn.id..bind.role:gsub('^%l', string.upper)
   end
-  if bind.properties then
+  
+  if bind.role == 'onSelection' then
+    xconn.properties.__keyValue = '__keyValue'
+  elseif bind.properties then
     for name, _ in pairs(bind.properties) do
-      table.insert(xconn.properties, name)
+      local nameWithoutRolePrefix = name:match("%u.*"):lower()
+      xconn.properties[name] = nameWithoutRolePrefix
     end
   end
 end
@@ -46,9 +50,18 @@ function resolve:makeConnector(link, symbolsTable)
   end
   if link.properties then
     for name, _ in pairs(link.properties) do
-      table.insert(newConn.properties, name)
+      local nameWithoutRolePrefix = name:match("_(.+)")
+      if nameWithoutRolePrefix ~= nil then
+       newConn.properties[name] = nameWithoutRolePrefix
+      end
     end
   end
+
+  for name, _ in pairs(newConn.properties) do
+    if name ~= '__keyValue' then
+      newConn.id = newConn.id..'_'..name
+    end
+ end
 
   -- TODO: Has to do all above to check if another equal
   -- connect is already created, wasting time. How to fix?

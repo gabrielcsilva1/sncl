@@ -10,7 +10,7 @@ function nclGeneration:conditions(conditions, indent, properties)
       if val > 1 then
          result = result..(' max="unbounded" qualifier="and"')
       end
-      if utils.containsValue(properties, '__keyValue') and pos == 'onSelection' then
+      if pos == 'onSelection' and utils.containsValue(properties, '__keyValue') then
          result = result..' key="$__keyValue"'
       end
       result = result..string.format('>%s   </simpleCondition>', indent)
@@ -18,15 +18,26 @@ function nclGeneration:conditions(conditions, indent, properties)
    return result
 end
 
-function nclGeneration:actions(actions, indent)
+function nclGeneration:actions(actions, conProperties, indent)
    local result = ''
-   for pos, val in pairs(actions) do
-      result = result..string.format('%s   <simpleAction role="%s"', indent, pos)
+   local tagAttibutes = {}
+   for attValue, attName in pairs(conProperties) do
+      local role = attValue:match("([%l]+)%u")
+
+      if not tagAttibutes[role] then
+         tagAttibutes[role] = string.format(' %s="$%s"', attName, attValue)
+      else
+         tagAttibutes[role] = tagAttibutes[role]..string.format(' %s="$%s"', attName, attValue)
+      end
+   end
+
+   for role, val in pairs(actions) do
+      result = result..string.format('%s   <simpleAction role="%s"', indent, role)
       if val > 1 then
          result = result..' max="unbounded" qualifier="par"'
       end
-      if pos == 'set' then
-         result = result..' value="$setValue"'
+      if tagAttibutes[role] then
+         result = result..tagAttibutes[role]
       end
       result = result..string.format('>%s   </simpleAction>', indent)
    end
@@ -54,12 +65,12 @@ function nclGeneration:xconnector(xconnector, indent)
    end
    if nActs > 1 then
       result = result..string.format('%s   <compoundAction operator="par" >', indent)
-      result = result..self:actions(xconnector.action, indent)
+      result = result..self:actions(xconnector.action, xconnector.properties, indent)
       result = result..string.format('%s   </compoundAction>', indent)
    else
-      result = result..self:actions(xconnector.action, indent)
+      result = result..self:actions(xconnector.action, xconnector.properties, indent)
    end
-   for _, value in pairs(xconnector.properties) do
+   for value, _ in pairs(xconnector.properties) do
       result = result..string.format('%s   <connectorParam name="%s" />', indent, value)
    end
    result = result..string.format('%s</causalConnector>', indent)
@@ -67,14 +78,20 @@ function nclGeneration:xconnector(xconnector, indent)
    return result
 end
 
-function nclGeneration.region(region, indent)
+function nclGeneration:region(region, indent)
    local result = string.format('%s <region id="%s"', indent, region.id)
    if region.properties then
       for name, value in pairs(region.properties) do
          result = result..string.format(' %s="%s"', name, value)
       end
    end
-   result = result..'/>'
+   result = result..'>'
+
+   for _, son in pairs(region.children) do
+      result = result..self:region(son, indent..'  ')
+   end
+
+   result = result..string.format('%s </region>', indent)
    return result
 end
 
@@ -95,9 +112,9 @@ function nclGeneration:head(symbolsTable, indent)
       if val._type == "xconnector"then
          has_conn = true
          connector_base = connector_base..self:xconnector(val, indent.."   ")
-      elseif val._type == "region" then
+      elseif val._type == "region" and not val.father then
          has_rg = true
-         region_base = region_base..self.region(val, indent.."   ")
+         region_base = region_base..self:region(val, indent.."   ")
       elseif val._type == "descriptor" then
          has_desc = true
          descriptor_base = descriptor_base..self:descriptor(val, indent.."   ")
@@ -150,7 +167,7 @@ function nclGeneration.bind(element, symbolsTable, indent)
    result = result..'>'
    if element.properties then
       for name, value in pairs(element.properties) do
-         result = result..string.format('%s   <bindParam name="%s" value="%s" >', indent, name, value)
+         result = result..string.format('%s   <bindParam name="%s" value="%s" />', indent, name, value)
       end
    end
    result = result..string.format('%s</bind>', indent)

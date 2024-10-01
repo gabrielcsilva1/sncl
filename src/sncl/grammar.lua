@@ -40,7 +40,7 @@ local grammar = {
       ReservedAction = P'start'+'stop'+'set',
       Reserved = V'Type'+V'ReservedAction'+V'ReservedCondition'+P'do',
       Id = R('az', 'AZ', '__') * V'Alphanumerics'^0,
-      PropertyValue = (V'Letter'+V'Numbers'+V'Symbols')^0,
+      PropertyValue = (V'Letter'+V'Numbers'+V'Symbols')^0 * (P','*V'Spc'^0*V'PropertyValue')^0,
       Property = parseTree.makeProperty( (C(V'Id') *V'Spc'^0* P':' *V'Spc'^0*
         C(P'"'*V'PropertyValue'*P'"' + V'PropertyValue') * V'Spc'^0)),
 

@@ -41,7 +41,7 @@ local parsingTable = {
       return {
         _type = 'property',
         [name] = value,
-        line = gbl.parseLine
+        line = gbl.parser_line
       }
     end
   end,
@@ -75,14 +75,17 @@ local parsingTable = {
       for _, val in pairs(tbl) do
         if type(val) == 'table' then
           if val._type == 'property' then
+            val._type = nil
+            val.line = nil
             for name, value in pairs(val) do
-              utils:addProperty(element, name, value)
+              local nameWithRolePrefix = element.role..name:gsub("^%l", string.upper)
+              utils:addProperty(element, nameWithRolePrefix, value)
             end
           else
             element.role = val.role
             element.component = val.component
             if val.interface then
-              if lpeg.match(utils.checks.buttons, val.interface) and element._type == 'condition' then
+              if element._type == 'condition' and lpeg.match(utils.checks.buttons, val.interface) then
                 utils:addProperty(element, '__keyValue', val.interface)
               else
                 element.interface = val.interface
