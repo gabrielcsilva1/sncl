@@ -5,7 +5,7 @@ function resolve:makeDescriptor(regionName, symbolsTable)
   local newDescriptor = {
     _type = "descriptor",
     region = regionName,
-    id = '__desc'..regionName
+    id = '__desc__'..regionName
   }
   symbolsTable.head[newDescriptor.id] = newDescriptor
   return newDescriptor.id

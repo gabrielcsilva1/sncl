@@ -234,8 +234,8 @@ function parsingTable:makePresentationElement(str, symbolsTable, isMacroSon)
     local element = {
       _type = _type,
       id = id,
-      properties = nil,
-      children = nil,
+      properties = {},
+      children = {},
       hasEnd = false,
       line = gbl.parser_line
     }
@@ -245,14 +245,39 @@ function parsingTable:makePresentationElement(str, symbolsTable, isMacroSon)
       return error(string.format("Id %s already declared", element.id))
     end
 
-    if element._type == 'region' then
+    if element._type == 'region' and not isMacroSon then
       symbolsTable.head[element.id] = element
-    elseif element._type == 'media' then
-      element = self:parseMediaBody(element, elementBody, symbolsTable)
+    elseif not isMacroSon then
+      symbolsTable.presentation[element.id] = element
     end
 
-    if not isMacroSon then
-      symbolsTable.presentation[element.id] = element
+    for _, val in pairs(elementBody) do
+      if type(val) == 'table' then
+        if val._type == 'property' then
+          for propertyName, propertyValue in pairs(val) do
+            if isMacroSon then
+              element.properties[propertyName] = propertyValue
+            else
+              if propertyName == 'rg' then
+                if element.region then
+                   utils.printError(string.format('Region %s already declared', element.region), element.line)
+                   return nil
+                end
+                element.region = propertyValue
+                
+                element.descriptor = resolve:makeDescriptor(propertyValue, symbolsTable)
+              else
+                utils:addProperty(element, propertyName, propertyValue)
+              end
+            end
+          end
+        else
+          table.insert(element.children, val)
+          val.father = element
+        end
+      elseif val == 'end' then
+        element.hasEnd = true
+      end
     end
 
     return element

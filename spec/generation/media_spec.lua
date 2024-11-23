@@ -1,5 +1,4 @@
 local nclGen = require('sncl.generation')
-
 describe('NCL #generation #media element.', function()
   it('Should generate a #media with attributes', function()
     local mockMedia = {
@@ -11,7 +10,6 @@ describe('NCL #generation #media element.', function()
     local result = nclGen:presentation(mockMedia, {}, '')
     assert.are.equal(expectedMockMediaNCL, result)
   end)
-
   it('Should generate a #media with properties', function()
     local mockMedia = {
       _type = 'media',
@@ -22,6 +20,22 @@ describe('NCL #generation #media element.', function()
     local result = nclGen:presentation(mockMedia, {}, '')
     assert.are.equal(expectedMockMediaNCL, result)
   end)
-
-  -- #TODO: Should generate a #media with #area children
+  it('Should generate a #media with #area children', function ()
+    local mockMedia = {
+      _type = 'media',
+      id = 'testMedia',
+      children ={
+        {
+          _type = 'area',
+          id = 'testArea',
+          properties = {
+            begin = '5s'
+          }
+        }
+      }
+    }
+    local expectedMockMediaNCL = '<media id="testMedia">   <area id="testArea" begin="5s" /></media>'
+    local result = nclGen:presentation(mockMedia, {}, '')
+    assert.are.equal(expectedMockMediaNCL, result)
+  end)
 end)
