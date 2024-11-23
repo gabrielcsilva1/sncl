@@ -106,7 +106,7 @@ end
 function utils:readFile(file)
   file = io.open(file, 'r')
   if not file then
-    self.printErro('Error opening input file')
+    self.printError('Error opening input file')
     return nil
   end
   local fileContent = file:read('*a')
@@ -120,7 +120,7 @@ end
 function utils:writeFile(file, content)
   file = io.open(file, "w")
   if not file then
-    self.printErro('Error creating output file')
+    self.printError('Error creating output file')
     return nil
   end
   io.output(file)
