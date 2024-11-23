@@ -39,7 +39,7 @@ function sncl:generateNCL(symbolsTable)
 
    -- generate the ncl from the Lua table
    local ncl = nclGeneration:generateNCL(symbolsTable)
-   if gbl.hasError then
+   if gbl.has_error then
       utils.printError('Error in sncl file')
       return gbl.errors, nil
    end

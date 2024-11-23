@@ -62,10 +62,10 @@ function utils.getElementsWithClass(elements, class)
 end
 
 function utils.printError(errorString, line)
-  line = line or gbl.parserLine
-  local file = gbl.inputFile or ''
+  line = line or gbl.parser_line
+  local file = gbl.input_file or ''
   io.write(colors('%{bright}'..file..':'..line..': %{red}erro:%{reset} '..errorString..'\n'))
-  gbl.hasError = true
+  gbl.has_error = true
 end
 
 function utils:addProperty(element, name, value)

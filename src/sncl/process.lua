@@ -9,7 +9,7 @@ require('sncl.macro')
 --    print(ins.inspect(element))
 --
 --    -- Se o Id é um parametro
---    if utils.containValue(macro.parameters, element.id) then
+--    if utils.containsValue(macro.parameters, element.id) then
 --       newEle.id = call.arguments[utils.getIndex(macro.parameters, element.id)]
 --    else
 --       newEle.id = element.id
@@ -24,7 +24,7 @@ require('sncl.macro')
 --    --    for name, value in pairs(element.properties) do
 --    --       -- If a property is a parameter, create the property
 --    --       -- with the new value
---    --       if utils.containValue(macro.parameters, value) then
+--    --       if utils.containsValue(macro.parameters, value) then
 --    --          pT.addProperty(newEle, name, call.arguments[utils.getIndex(macro.parameters, value)])
 --    --       else
 --    --          pT.addProperty(newEle, name, value)
@@ -57,7 +57,7 @@ require('sncl.macro')
 --          newAct.properties = {}
 --          for name, value in pairs(act.properties) do
 --             -- TODO: Check if the name is a parameter?
---             if utils.containValue(macro.parameters, value) then
+--             if utils.containsValue(macro.parameters, value) then
 --                newAct.properties[name] = call.arguments[utils.getIndex(macro.parameters, value)]
 --             else
 --                newAct.properties[name] = value
@@ -73,7 +73,7 @@ require('sncl.macro')
 
 --       -- TODO: BUTTONS
 --       if cond.interface then
---          if utils.containValue(macro.parameters, cond.interface) then
+--          if utils.containsValue(macro.parameters, cond.interface) then
 --             newCond.interface = call.arguments[utils.getIndex(macro.parameters, cond.interface)]
 --          else
 --             newCond.interface = cond.interface
@@ -90,7 +90,7 @@ require('sncl.macro')
 --       newEle.properties = {}
 --       for name, value in pairs(son.properties) do
 --          -- TODO: Check if the name is a parameter?
---          if utils.containValue(macro.parameters, value) then
+--          if utils.containsValue(macro.parameters, value) then
 --             newEle.properties[name] = call.arguments[utils.getIndex(macro.parameters, value)]
 --          else
 --             newEle.properties[name] = value
@@ -146,7 +146,7 @@ require('sncl.macro')
 --             for pos, val in pairs(element) do 
 --                if type(val) == "table" then -- Se for uma table, é um elemento
 --                else
---                   if utils.containValue(parameters, pos) then
+--                   if utils.containsValue(parameters, pos) then
 --                      call.arguments[utils.getIndex(parameters, pos)] = element[pos]
 --                   end
 --                end
