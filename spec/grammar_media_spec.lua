@@ -9,6 +9,7 @@ describe("#grammar #media element", function()
           _type = "media",
           id = "testMedia",
           hasEnd = true,
+          line = 1
         }
       }
     }
@@ -29,6 +30,7 @@ describe("#grammar #media element", function()
           src = '"../images/testImage.png"',
           descriptor = "testDescriptor",
           hasEnd = true,
+          line = 5
         }
       }
     }
@@ -54,6 +56,7 @@ describe("#grammar #media element", function()
             focusBorderWidth = "3",
             right = "10%",
           },
+          line = 10
         }
       }
     }
