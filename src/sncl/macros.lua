@@ -41,10 +41,10 @@ function resolveMacros:presentation(ele, call, stack, symbolsTable)
       children = {},
       line = call.line
    }
-
    local parameters = symbolsTable.macro[call.macro].parameters
    if ele._type == 'port' then
       newEle.component = self.getArgument(call.arguments, parameters, ele.component)
+      newEle.interface = self.getArgument(call.arguments, parameters, ele.interface)
    end
 
    local newId = self.getArgument(call.arguments, parameters, ele.id)
@@ -53,7 +53,7 @@ function resolveMacros:presentation(ele, call, stack, symbolsTable)
       utils.printError(string.format('Id %s already declared.', newId), call.line)
       return nil
    end
-   newId = newId:gsub('"', '') -- Remove "", because the argument has ""
+   newId = utils:removeQuotes(newId) -- Remove "", because the argument has ""
    newEle.id = newId
 
    if ele.properties then
@@ -82,17 +82,17 @@ function resolveMacros:presentation(ele, call, stack, symbolsTable)
       end
    end
 
-   if call.father then
-      if call.father._type == 'for' then
-         -- If the call is inside a for, then the father of the element is the father of the for
-         newEle.father = call.father.father
-      else
-         newEle.father = call.father
-      end
-      if newEle.father then
-         newEle.father.children[newEle.id] = newEle
-      end
-   end
+   -- if call.father then
+   --    if call.father._type == 'for' then
+   --       -- If the call is inside a for, then the father of the element is the father of the for
+   --       newEle.father = call.father.father
+   --    else
+   --       newEle.father = call.father
+   --    end
+   --    if newEle.father then
+   --       newEle.father.children[newEle.id] = newEle
+   --    end
+   -- end
 
    return newEle
 end
@@ -107,7 +107,8 @@ end
 -- @param argument
 function resolveMacros.getArgument(arguments, parameters, value)
    if utils.containsValue(parameters, value) then
-      return arguments[utils.getIndex(parameters, value)]
+      local argumentValue = arguments[utils.getIndex(parameters, value)]
+      return utils:removeQuotes(argumentValue)
    end
    return value
 end
@@ -137,7 +138,7 @@ function resolveMacros:bind(bind, call, symbolsTable)
    end
 
    for name, value in pairs(bind.properties) do
-      newBind.properties[name] = self.getAgument(macro.parameters, value)
+      newBind.properties[name] = self.getArgument(call.arguments, macro.parameters, value)
    end
 
    return newBind
@@ -175,6 +176,7 @@ function resolveMacros:link(ele, call, symbolsTable)
       newEle.properties[name] = self.getArgument(call.arguments, macro.parameters, value)
    end
 
+   table.insert(symbolsTable.presentation, newEle)
    return newEle
 end
 
@@ -193,13 +195,15 @@ function resolveMacros:aux(call, stack, symbolsTable)
    for _, son in pairs(macro.children) do
       if son._type == 'link' then
          local newLink = self:link(son, call, symbolsTable)
-         table.insert(newLink)
+         table.insert(newEles, newLink)
          -- resolveLinkMacro
+      elseif son._type == 'macro-call' then
+         self:call(son, stack, symbolsTable)
       else
          local newPres = self:presentation(son, call, stack, symbolsTable)
          newEles[newPres.id] = newPres
       end
-      -- TODO: The son can also be a property, or a macro-call
+      -- TODO: The son can also be a property
    end
    table.remove(stack)
 
@@ -240,24 +244,24 @@ function resolveMacros:call(call, stack, symbolsTable)
    --[[If the argument has "", then it is being passed by the call
       else, then the call is inside a macro, and the argument of the call is
       a parameter of the macro]]
-   for p, val in pairs(call.arguments) do
-      if val:match("\"*\"") then
-         call.arguments[p] = val
+   for argIndex, value in pairs(call.arguments) do
+      if value:match('\"([^"]*)\"') then
+         call.arguments[argIndex] = value
       else
          if abv then
             --[[ Check if the macro really has the argument as a parameter
                If it does, then the call must pass the value of the argument
                is what is being passed to the macro that the call is inside]]
-            if utils.containsValue(symbolsTable.macro[abv.macro].parameters, val) then
-               local index = utils.getIndex(symbolsTable.macro[abv.macro].parameters, val)
-               call.arguments[p] = abv.arguments[index]
+            if utils.containsValue(symbolsTable.macro[abv.macro].parameters, value) then
+               local index = utils.getIndex(symbolsTable.macro[abv.macro].parameters, value)
+               call.arguments[argIndex] = abv.arguments[index]
             else
                utils.printError(string.format('Argument %s is not a parameter of a macro.',
-                  val), call.line)
+                  value), call.line)
                return nil
             end
          else
-            utils.printError(string.format('Argument %s invalid.', val), call.line)
+            utils.printError(string.format('Argument %s invalid.', value), call.line)
             return nil
          end
       end

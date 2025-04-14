@@ -67,7 +67,7 @@ local parsingTable = {
       local tbl = {...}
       local element = {
         _type = _type,
-        properties = nil,
+        properties = {},
         line = gbl.parser_line,
         hasEnd = false
       }
@@ -152,7 +152,6 @@ local parsingTable = {
       local element = {
         _type = 'macro',
         id = id,
-        properties = {},
         children = {},
         parameters = {},
         hasEnd = false,

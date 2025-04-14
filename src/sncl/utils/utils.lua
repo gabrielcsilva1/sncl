@@ -76,8 +76,7 @@ function utils:addProperty(element, name, value)
     return error(string.format("Property %s already declared", name))
   end
 
-  -- Remove aspas duplas, se tiver
-  value = string.gsub(value, '^"(.-)"$', "%1")
+  value = self:removeQuotes(value)
   
   if name == "src" then
     element.src = value
@@ -93,6 +92,11 @@ function utils:isIdUsed(id, symbolsTable)
     return true
   end
   return false
+end
+
+function utils:removeQuotes(value)
+  newValue = string.gsub(value, '^"(.-)"$', "%1")
+  return newValue
 end
 
 function utils:isMacroSon(element)
@@ -120,6 +124,8 @@ function utils:readFile(file)
     return nil
   end
   local fileContent = file:read('*a')
+  io.close(file)
+  
   if not fileContent then
     self.printError('Error reading input')
     return nil

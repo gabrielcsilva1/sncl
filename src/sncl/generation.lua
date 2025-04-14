@@ -118,7 +118,6 @@ end
 function nclGeneration.bind(element, symbolsTable, indent)
    local result = ""
    local link = element.father
-
    local hasComp = false
    -- If the link is inside of a context
    if link.father then
