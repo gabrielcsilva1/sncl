@@ -15,7 +15,7 @@ local resolveMacros = {
       for name, value in pairs(ele.properties) do
          --[[ If the property is a parameter ]]
          local parameters = sT.macro[call.macro].parameters
-         if utils.containValue(parameters, value) then
+         if utils.containsValue(parameters, value) then
             local index = utils.getIndex(parameters, value)
             utils:addProperty(newEle, name, call.arguments[index])
          else
@@ -50,7 +50,7 @@ function resolveMacros:presentation(ele, call, stack, sT)
    local newId = self.getArgument(call.arguments, parameters, ele.id)
    --[[ Check is an element with the same Id is already declared ]]
    if sT.presentation[newId] then
-      utils.printErro(string.format('Id %s already declared.', newId), call.line)
+      utils.printError(string.format('Id %s already declared.', newId), call.line)
       return nil
    end
    newId = newId:gsub('"', '') -- Remove "", because the argument has ""
@@ -106,7 +106,7 @@ end
 -- @param parameters
 -- @param argument
 function resolveMacros.getArgument(arguments, parameters, value)
-   if utils.containValue(parameters, value) then
+   if utils.containsValue(parameters, value) then
       return arguments[utils.getIndex(parameters, value)]
    end
    return value
@@ -216,7 +216,7 @@ function resolveMacros:call(call, stack, sT)
 
    --[[ If the called macro is not declared ]]
    if not macro then
-      utils.printErro(string.format("Macro %s not declared.", call.macro), call.line)
+      utils.printError(string.format("Macro %s not declared.", call.macro), call.line)
       return nil
    end
 
@@ -228,11 +228,11 @@ function resolveMacros:call(call, stack, sT)
             the padding document must have the same number of properties as
             the number of arguments of the macro --]]
          if call.father._type ~= 'for' then
-            utils.printErro('Wrong number of arguments.', call.line)
+            utils.printError('Wrong number of arguments.', call.line)
             return nil
          end
       else
-         utils.printErro('Wrong number of arguments.', call.line)
+         utils.printError('Wrong number of arguments.', call.line)
          return nil
       end
    end
@@ -248,16 +248,16 @@ function resolveMacros:call(call, stack, sT)
             --[[ Check if the macro really has the argument as a parameter
                If it does, then the call must pass the value of the argument
                is what is being passed to the macro that the call is inside]]
-            if utils.containValue(sT.macro[abv.macro].parameters, val) then
+            if utils.containsValue(sT.macro[abv.macro].parameters, val) then
                local index = utils.getIndex(sT.macro[abv.macro].parameters, val)
                call.arguments[p] = abv.arguments[index]
             else
-               utils.printErro(string.format('Argument %s is not a parameter of a macro.',
+               utils.printError(string.format('Argument %s is not a parameter of a macro.',
                   val), call.line)
                return nil
             end
          else
-            utils.printErro(string.format('Argument %s invalid.', val), call.line)
+            utils.printError(string.format('Argument %s invalid.', val), call.line)
             return nil
          end
       end

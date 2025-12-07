@@ -62,10 +62,10 @@ function utils.getElementsWithClass(elements, class)
 end
 
 function utils.printError(errorString, line)
-  line = line or gbl.parserLine
-  local file = gbl.inputFile or ''
+  line = line or gbl.parser_line
+  local file = gbl.input_file or ''
   io.write(colors('%{bright}'..file..':'..line..': %{red}erro:%{reset} '..errorString..'\n'))
-  gbl.hasError = true
+  gbl.has_error = true
 end
 
 function utils:addProperty(element, name, value)
@@ -106,7 +106,7 @@ end
 function utils:readFile(file)
   file = io.open(file, 'r')
   if not file then
-    self.printErro('Error opening input file')
+    self.printError('Error opening input file')
     return nil
   end
   local fileContent = file:read('*a')
@@ -120,7 +120,7 @@ end
 function utils:writeFile(file, content)
   file = io.open(file, "w")
   if not file then
-    self.printErro('Error creating output file')
+    self.printError('Error creating output file')
     return nil
   end
   io.output(file)
