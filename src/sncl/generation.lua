@@ -67,14 +67,21 @@ function nclGeneration:xconnector(xconnector, indent)
    return result
 end
 
-function nclGeneration.region(region, indent)
+function nclGeneration:region(region, indent)
    local result = string.format('%s <region id="%s"', indent, region.id)
    if region.properties then
       for name, value in pairs(region.properties) do
          result = result..string.format(' %s="%s"', name, value)
       end
    end
-   result = result..'/>'
+   result = result..'>'
+
+   for _, son in pairs(region.children) do
+      result = result..self:region(son, indent..'  ')
+   end
+
+   result = result..string.format('%s </region>', indent)
+   
    return result
 end
 
@@ -95,9 +102,9 @@ function nclGeneration:head(symbolsTable, indent)
       if val._type == "xconnector"then
          has_conn = true
          connector_base = connector_base..self:xconnector(val, indent.."   ")
-      elseif val._type == "region" then
+      elseif val._type == "region" and not val.father then
          has_rg = true
-         region_base = region_base..self.region(val, indent.."   ")
+         region_base = region_base..self:region(val, indent.."   ")
       elseif val._type == "descriptor" then
          has_desc = true
          descriptor_base = descriptor_base..self:descriptor(val, indent.."   ")
@@ -150,7 +157,7 @@ function nclGeneration.bind(element, symbolsTable, indent)
    result = result..'>'
    if element.properties then
       for name, value in pairs(element.properties) do
-         result = result..string.format('%s   <bindParam name="%s" value="%s" >', indent, name, value)
+         result = result..utils:formatWithoutQuotes('%s   <bindParam name="%s" value="%s" />', indent, name, value)
       end
    end
    result = result..string.format('%s</bind>', indent)
@@ -169,11 +176,24 @@ function nclGeneration:link(element, symbolsTable, indent)
    end
    if element.properties then
       for name, value in pairs(element.properties) do
-         result = result..string.format('%s   <linkParam name="%s" value="%s" />', indent, name, value)
+         result = result..utils:formatWithoutQuotes('%s   <linkParam name="%s" value="%s" />', indent, name, value)
       end
    end
    result = result..string.format('%s</link>', indent)
 
+   return result
+end
+
+function nclGeneration:area(element, indent)
+   local result = string.format('%s<area id="%s"', indent, element.id)
+
+   if element.properties then
+      for name, value in pairs(element.properties) do
+         result = result..string.format(' %s="%s"', name, value)
+      end
+   end
+
+   result = result..' />'
    return result
 end
 
@@ -182,6 +202,9 @@ function nclGeneration:presentation(element, symbolsTable, indent)
       return ''
    end
 
+   if element._type == 'area' then
+      return self:area(element, indent)
+   end
    -- Check if the refered region is decladed
    if element.region then
       if not symbolsTable.head[element.region] then

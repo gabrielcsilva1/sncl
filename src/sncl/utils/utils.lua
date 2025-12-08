@@ -68,11 +68,29 @@ function utils.printError(errorString, line)
   gbl.has_error = true
 end
 
-function utils:addProperty(element, name, value)
-  if name == "_type" then return nil end
-  if not element.properties then element.properties = {} end
+function utils:addProperty(element, name, value, removeQuotes)
+  -- Default is false
+  removeQuotes = removeQuotes or false
+
+  if name == "_type" or name == "line" then return nil end
+
+  if removeQuotes then
+    value = utils:removeQuotes(value)
+  end
+
+  if not element.properties then 
+    element.properties = {
+      [name] = value
+    } 
+  end
   if element.properties[name] then
     return error(string.format("Property %s already declared", name))
+  end
+
+  if name == "src" then
+    element.src = value
+  elseif name == "type" then
+    element.type = value
   else
     element.properties[name] = value
   end
@@ -83,6 +101,24 @@ function utils:isIdUsed(id, symbolsTable)
     return true
   end
   return false
+end
+
+function utils:removeQuotes(value)
+  if (value == nil) then return nil end
+
+  newValue = string.gsub(value, '^"(.-)"$', "%1")
+  return newValue
+end
+
+function utils:formatWithoutQuotes(fmt, ...)
+  local args = {...}
+  local cleaned = {}
+
+  for _, value in pairs(args) do
+    table.insert(cleaned, self:removeQuotes(value))
+  end
+
+  return string.format(fmt, table.unpack(cleaned))
 end
 
 function utils:isMacroSon(element)
