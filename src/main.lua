@@ -2,7 +2,7 @@ local utils = require('sncl.utils')
 local gbl = require('sncl.globals')
 
 local grammar = require('sncl.grammar')
---local pp = require('sncl.pre_process')
+local preprocess  = require('sncl.preprocessing')
 local ltab = require('sncl.ltab')
 local nclGeneration = require('sncl.generation')
 
@@ -62,6 +62,7 @@ function sncl:beginParse(args)
       return sncl, gbl.errors, nil
    end
 
+   preprocess.pre_process(symbolsTable)
    -- gerar o ltab
 --   if args.to_ltab then
 --      ltab = sncl.generage(symbol_tbl)
