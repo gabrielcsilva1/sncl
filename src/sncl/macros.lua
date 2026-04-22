@@ -25,12 +25,6 @@ function resolveMacros:elementProperties(ele, newEle, call, sT)
       else
          utils:addProperty(newEle, name, value, true)
       end
-      -- if utils.containsValue(parameters, value) then
-      --    local index = utils.getIndex(parameters, value)
-      --    utils:addProperty(newEle, name, call.arguments[index], true)
-      -- else
-      --    utils:addProperty(newEle, name, value, true)
-      -- end
    end
 end
 

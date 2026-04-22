@@ -176,7 +176,7 @@ function nclGeneration:link(element, symbolsTable, indent)
    end
    if element.properties then
       for name, value in pairs(element.properties) do
-         result = result..utils:formatWithoutQuotes('%s   <linkParam name="%s" value="%s" />', indent, name, value)
+         result = result..string.format('%s   <linkParam name="%s" value="%s" />', indent, name, value)
       end
    end
    result = result..string.format('%s</link>', indent)

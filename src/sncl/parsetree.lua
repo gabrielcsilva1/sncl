@@ -113,6 +113,9 @@ local parsingTable = {
         line = gbl.parser_line,
         hasEnd = false
       }
+
+      local removeQuotes = not isMacroSon
+
       for _, val in pairs(tbl) do
         if type(val) == 'table' then
           if val._type == 'action' then
@@ -123,7 +126,7 @@ local parsingTable = {
             table.insert(element.conditions, val)
           else
             for name, value in pairs(val) do
-              utils:addProperty(element, name, value)
+              utils:addProperty(element, name, value, removeQuotes)
             end
           end
         elseif val == 'end' then

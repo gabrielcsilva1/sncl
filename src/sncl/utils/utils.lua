@@ -78,11 +78,8 @@ function utils:addProperty(element, name, value, removeQuotes)
     value = utils:removeQuotes(value)
   end
 
-  if not element.properties then 
-    element.properties = {
-      [name] = value
-    } 
-  end
+  if not element.properties then element.properties = {} end
+  
   if element.properties[name] then
     return error(string.format("Property %s already declared", name))
   end
